@@ -29,6 +29,17 @@ describe('markdownSegmenter', () => {
     expect(segmentsOf('Code:\n```js\na. b\n\nc. d\n```\nAfter. End')).toEqual(['Code:\n', '```js\na. b\n\nc. d\n```\n', 'After. ', 'End'])
   })
 
+  // https://github.com/moeru-ai/airi/issues/3391
+  // ROOT CAUSE:
+  //
+  // An unclosed `[`, as the emoticon `:[`, kept `brackets` open across blank lines, so no later sentence ended.
+  // We reset `brackets` and `url` on a blank line, because a link cannot cross one.
+  it('ends sentences after a blank line when a bracket stays unclosed (Issue #3391)', () => {
+    expect(segmentsOf('Aww :[ bad.\n\nHere is the plan. Done.')).toEqual(['Aww :[ bad.\n', '\n', 'Here is the plan. ', 'Done.'])
+    expect(segmentsOf('难过 :[ :[\n\n我们来看一下计划。搞定了。')).toEqual(['难过 :[ :[\n', '\n', '我们来看一下计划。', '搞定了。'])
+    expect(segmentsOf('点击 [这里](http\n\n新的一段开始了。好了。')).toEqual(['点击 [这里](http\n', '\n', '新的一段开始了。', '好了。'])
+  })
+
   it('does not open a formula at a price', () => {
     expect(segmentsOf('It costs $5. Then $x$. End')).toEqual(['It costs $5. ', 'Then $x$. ', 'End'])
   })
